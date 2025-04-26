@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<edges>
+    <edge id="north2center" from="north" to="center" priority="1"/>
+    <edge id="center2south" from="center" to="south" priority="1"/>
+    <edge id="west2center" from="west" to="center" priority="1"/>
+    <edge id="center2east" from="center" to="east" priority="1"/>
+</edges>

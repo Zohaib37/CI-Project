@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<routes>
+    <vType id="car" accel="1.0" decel="4.5" maxSpeed="20" length="5" color="1,0,0"/>
+
+    <route id="north_to_south" edges="north2center center2south"/>
+    <route id="west_to_east" edges="west2center center2east"/>
+
+    <vehicle id="veh1" type="car" route="north_to_south" depart="0"/>
+    <vehicle id="veh2" type="car" route="west_to_east" depart="5"/>
+    <vehicle id="veh3" type="car" route="north_to_south" depart="10"/>
+    <vehicle id="veh4" type="car" route="west_to_east" depart="15"/>
+</routes>
