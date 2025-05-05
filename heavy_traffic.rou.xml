@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+    <vType id="car" accel="1.0" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="13.89" guiShape="passenger"/>
+
+    <route id="north2south" edges="north2center center2south"/>
+    <route id="west2east" edges="west2center center2east"/>
+    <route id="north2east" edges="north2center center2east"/>
+    <route id="west2south" edges="west2center center2south"/>
+
+    <!-- 10 vehicles total, departing every 2 seconds -->
+    <vehicle id="veh1" type="car" route="north2south" depart="0"/>
+    <vehicle id="veh2" type="car" route="west2east" depart="2"/>
+    <vehicle id="veh3" type="car" route="north2east" depart="4"/>
+    <vehicle id="veh4" type="car" route="west2south" depart="6"/>
+    <vehicle id="veh5" type="car" route="north2south" depart="8"/>
+    <vehicle id="veh6" type="car" route="west2east" depart="10"/>
+    <vehicle id="veh7" type="car" route="north2east" depart="12"/>
+    <vehicle id="veh8" type="car" route="west2south" depart="14"/>
+    <vehicle id="veh9" type="car" route="north2south" depart="16"/>
+    <vehicle id="veh10" type="car" route="west2east" depart="18"/>
+</routes>
