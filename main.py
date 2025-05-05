@@ -21,40 +21,44 @@ def evaluate(individual):
 
     # Start SUMO simulation
     sumoBinary = "sumo"
-    sumoCmd = [sumoBinary, "-c", "simulation.sumocfg"]
-
-    # Start the simulation
-    traci.start(sumoCmd)
-
-    # Get the traffic light ID
-    tls_id = traci.trafficlight.getIDList()[0]
-    print(f"Controlling traffic light: {tls_id}")
-
-    phases = [
-        traci.trafficlight.Phase(duration=g1, state="GGrr"),  # N-S Green, E-W Red. Lasts for 42ms
-        traci.trafficlight.Phase(duration=y1,  state="yyrr"),  # N-S yellow, E-W remains Red. Lasts for 3ms
-        traci.trafficlight.Phase(duration=g2, state="rrGG"),  # N-S becomes red. E-W becomes green. Lasts for 42ms
-        traci.trafficlight.Phase(duration=y2,  state="rryy")   # N-s remains red. E-W becomes yellow. Lasts for 3ms
-    ]
-
-    new_program = traci.trafficlight.Logic("new_program", 0, 0, phases)
-    traci.trafficlight.setCompleteRedYellowGreenDefinition(tls_id, new_program)
+    # sumoCmd = [sumoBinary, "-c", "simulation.sumocfg"]
+    traffic_files = ["light_traffic.rou.xml", "heavy_traffic.rou.xml"]
 
     # Track metrics
     total_waiting_time = 0
     vehicle_steps = 0
 
-    # Simulate
-    for step in range(0, 100):
-        traci.simulationStep()
+    for traffic in traffic_files:
+        sumoCmd = [sumoBinary, "-n", "network.net.xml", "-r", traffic]
 
-        vehicle_ids = traci.vehicle.getIDList()
-        for veh_id in vehicle_ids:
-            total_waiting_time += traci.vehicle.getAccumulatedWaitingTime(veh_id)
+        # Start the simulation
+        traci.start(sumoCmd)
 
-        vehicle_steps += len(vehicle_ids)
+        # Get the traffic light ID
+        tls_id = traci.trafficlight.getIDList()[0]
+        # print(f"Controlling traffic light: {tls_id}")
 
-    traci.close()
+        phases = [
+            traci.trafficlight.Phase(duration=g1, state="GGrr"),  # N-S Green, E-W Red. Lasts for 42ms
+            traci.trafficlight.Phase(duration=y1,  state="yyrr"),  # N-S yellow, E-W remains Red. Lasts for 3ms
+            traci.trafficlight.Phase(duration=g2, state="rrGG"),  # N-S becomes red. E-W becomes green. Lasts for 42ms
+            traci.trafficlight.Phase(duration=y2,  state="rryy")   # N-s remains red. E-W becomes yellow. Lasts for 3ms
+        ]
+
+        new_program = traci.trafficlight.Logic("new_program", 0, 0, phases)
+        traci.trafficlight.setCompleteRedYellowGreenDefinition(tls_id, new_program)
+
+        # Simulate
+        for step in range(0, 100):
+            traci.simulationStep()
+
+            vehicle_ids = traci.vehicle.getIDList()
+            for veh_id in vehicle_ids:
+                total_waiting_time += traci.vehicle.getAccumulatedWaitingTime(veh_id)
+
+            vehicle_steps += len(vehicle_ids)
+
+        traci.close()
 
     # Calculate average waiting time
     if vehicle_steps > 0:
@@ -85,6 +89,8 @@ def tournament_parent_selection(score):
     if parents[0][1] < parents[1][1]:
         return parents[0][0]
     return parents[1][0]
+
+print(f"Average waiting time before GA: {evaluate([42, 3, 42, 3])}")
 
 population = [generate_individual() for _ in range(POP_SIZE)]
 
