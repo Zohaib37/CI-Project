@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2025-05-11 20:37:07.959319 by randomTrips.py v1_22_0+0002-63e50f52594
+<configuration>
+    <net-file value="network.net.xml"/>
+    <route-file value="random_test_heavy_traffic.rou.xml"/>
+    <prefix value="veh_26141"/>
+    <trip-attributes value="departSpeed=&quot;max&quot;"/>
+    <seed value="26141"/>
+    <validate value="True"/>
+    <end value="100.0"/>
+    <period value="5.0"/>
+</configuration>
+-->
+
+<!-- generated on 2025-05-11 20:37:07 by Eclipse SUMO duarouter Version 1.22.0
+<duarouterConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/duarouterConfiguration.xsd">
+
+    <input>
+        <net-file value="network.net.xml"/>
+        <route-files value="trips.trips.xml"/>
+    </input>
+
+    <output>
+        <output-file value="random_test_heavy_traffic.rou.xml"/>
+        <alternatives-output value="NUL"/>
+    </output>
+
+    <time>
+        <begin value="0.0"/>
+        <end value="100.0"/>
+    </time>
+
+    <report>
+        <no-warnings value="true"/>
+        <ignore-errors value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+</duarouterConfiguration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vehicle id="veh_261410" depart="0.00" departSpeed="max">
+        <route edges="north2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_261411" depart="5.00" departSpeed="max">
+        <route edges="west2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_261412" depart="10.00" departSpeed="max">
+        <route edges="west2center center2east"/>
+    </vehicle>
+    <vehicle id="veh_261413" depart="15.00" departSpeed="max">
+        <route edges="north2center center2east"/>
+    </vehicle>
+    <vehicle id="veh_261414" depart="20.00" departSpeed="max">
+        <route edges="north2center center2east"/>
+    </vehicle>
+    <vehicle id="veh_261415" depart="25.00" departSpeed="max">
+        <route edges="north2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_261416" depart="30.00" departSpeed="max">
+        <route edges="west2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_261417" depart="35.00" departSpeed="max">
+        <route edges="west2center center2east"/>
+    </vehicle>
+    <vehicle id="veh_261418" depart="40.00" departSpeed="max">
+        <route edges="north2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_261419" depart="45.00" departSpeed="max">
+        <route edges="west2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_2614110" depart="50.00" departSpeed="max">
+        <route edges="north2center center2east"/>
+    </vehicle>
+    <vehicle id="veh_2614111" depart="55.00" departSpeed="max">
+        <route edges="north2center center2east"/>
+    </vehicle>
+    <vehicle id="veh_2614112" depart="60.00" departSpeed="max">
+        <route edges="north2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_2614113" depart="65.00" departSpeed="max">
+        <route edges="west2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_2614114" depart="70.00" departSpeed="max">
+        <route edges="west2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_2614115" depart="75.00" departSpeed="max">
+        <route edges="north2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_2614116" depart="80.00" departSpeed="max">
+        <route edges="north2center center2south"/>
+    </vehicle>
+    <vehicle id="veh_2614117" depart="85.00" departSpeed="max">
+        <route edges="north2center center2east"/>
+    </vehicle>
+    <vehicle id="veh_2614118" depart="90.00" departSpeed="max">
+        <route edges="north2center center2east"/>
+    </vehicle>
+    <vehicle id="veh_2614119" depart="95.00" departSpeed="max">
+        <route edges="north2center center2east"/>
+    </vehicle>
+</routes>

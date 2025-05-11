@@ -1,0 +1,8 @@
+=== Final Train Results ===
+Best traffic light configuration: [11, 4, 19, 4]
+Best score (avg. waiting time): 1.41 seconds
+
+=== Testing Best Individual On Unseen Data ===
+Baseline Score On Test Data: 8.487518355359764
+GA Optimized Score on Test Data: 3.60 seconds avg. waiting time
+Improvement over baseline: 57.59%

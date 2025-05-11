@@ -6,10 +6,10 @@ import time
 from datetime import datetime
 
 # GA Parameters
-POP_SIZE = 10
+POP_SIZE = 50
 NUM_GENERATIONS = 20
 MUTATION_RATE = 0.2
-NUM_CHILDREN = 5
+NUM_CHILDREN = 10
 
 # Traffic Light Timing Constraints
 GREEN_RANGE = (10, 60)

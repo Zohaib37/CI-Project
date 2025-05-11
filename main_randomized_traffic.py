@@ -35,7 +35,7 @@ GREEN_RANGE = (10, 60)
 YELLOW_RANGE = (3, 5)
 
 # Visualization Settings
-VISUALIZATION_MODE = False  # Set to False for headless mode (faster)
+VISUALIZATION_MODE = True  # Set to False for headless mode (faster)
 VISUALIZATION_DELAY = 0.05  # Seconds between steps when visualizing
 
 def generate_individual():
@@ -46,7 +46,7 @@ def generate_individual():
     y2 = random.randint(*YELLOW_RANGE)
     return [g1, y1, g2, y2]
 
-def start_sumo(gui=True, config_file=None, net_file="network.net.xml", route_file="light_traffic.rou.xml"):
+def start_sumo(gui=False, config_file=None, net_file="network.net.xml", route_file="light_traffic.rou.xml"):
     """Start a SUMO simulation"""
     if gui and VISUALIZATION_MODE:
         sumoBinary = "sumo-gui"
@@ -88,8 +88,8 @@ def evaluate_individual(individual, traffic_files, sim_steps=100):
     total_vehicle_steps = 0
     
     for traffic_file in traffic_files:
-        # Start a new simulation for each traffic scenario
-        tls_id = start_sumo(gui=True, net_file="network.net.xml", route_file=traffic_file)
+        # Start a new simulation for each traffic scenario - NO GUI during evaluation
+        tls_id = start_sumo(gui=False, net_file="network.net.xml", route_file=traffic_file)
         
         # Apply the individual's traffic light settings
         apply_traffic_light_settings(tls_id, individual)
@@ -102,9 +102,6 @@ def evaluate_individual(individual, traffic_files, sim_steps=100):
         for step in range(sim_steps):
             traci.simulationStep()
             
-            if VISUALIZATION_MODE:
-                time.sleep(VISUALIZATION_DELAY)  # Add delay for visualization
-                
             # Collect metrics
             vehicle_ids = traci.vehicle.getIDList()
             for veh_id in vehicle_ids:
@@ -150,7 +147,7 @@ def tournament_selection(scored_population):
         return candidates[0][0]
     return candidates[1][0]
 
-def visualize_best_solution(best_individual, traffic_files, sim_steps=300):
+def visualize_best_solution(best_individual, traffic_files, sim_steps=150):
     """Run a longer visualization of the best solution"""
     print("\n=== Visualizing Best Solution ===")
     print(f"Best traffic light configuration: {best_individual}")
@@ -171,6 +168,26 @@ def visualize_best_solution(best_individual, traffic_files, sim_steps=300):
             
         traci.close()
 
+def visualize_generation_best(individual, traffic_files, generation, sim_steps=150):
+    """Visualize the best individual of a generation"""
+    print(f"\n=== Visualizing Generation {generation} Best Solution ===")
+    print(f"Best configuration: {individual}")
+    
+    for traffic_file in traffic_files:
+        print(f"\nRunning visualization with {traffic_file}...")
+        tls_id = start_sumo(gui=True, net_file="network.net.xml", route_file=traffic_file)
+        apply_traffic_light_settings(tls_id, individual)
+        
+        for step in range(sim_steps):
+            traci.simulationStep()
+            
+            if step % 50 == 0:
+                print(f"  Simulation step: {step}/{sim_steps}")
+                
+            time.sleep(VISUALIZATION_DELAY)  # Visual delay
+            
+        traci.close()
+
 def main():
     """Main function to run the genetic algorithm for traffic light optimization"""
     # Setup for the GA
@@ -188,6 +205,9 @@ def main():
     best_individual = None
     best_score = float('inf')
     
+    # Track generation history for visualization
+    generation_history = []
+    
     for gen in range(NUM_GENERATIONS):
         print(f"\n--- Generation {gen + 1}/{NUM_GENERATIONS} ---")
         
@@ -201,6 +221,9 @@ def main():
         # Sort by fitness (lower is better)
         scored_population.sort(key=lambda x: x[1])
         
+        # Track the best score of this generation
+        generation_history.append(scored_population[0][1])
+        
         # Update best found solution
         if scored_population[0][1] < best_score:
             best_score = scored_population[0][1]
@@ -208,6 +231,9 @@ def main():
             
         print(f"  Generation best: {scored_population[0][0]}, Score: {scored_population[0][1]:.2f}")
         print(f"  Overall best: {best_individual}, Score: {best_score:.2f}")
+        
+        # Visualize the best individual of this generation
+        visualize_generation_best(scored_population[0][0], traffic_files, gen + 1)
         
         # Create the next generation
         new_population = []
@@ -238,18 +264,27 @@ def main():
         # Replace the old population
         population = new_population
     
+    # Plot convergence history
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, NUM_GENERATIONS + 1), generation_history, 'b-', marker='o')
+    plt.xlabel('Generation')
+    plt.ylabel('Best Score (Average Waiting Time)')
+    plt.title('GA Convergence History')
+    plt.grid(True)
+    plt.savefig('convergence_history.png')
+    plt.close()
+    
     # Final train results
     print("\n=== Final Train Results ===")
     print(f"Best traffic light configuration: {best_individual}")
     print(f"Best score (avg. waiting time): {best_score:.2f} seconds")
-    # print(f"Improvement over baseline: {(baseline_score - best_score) / baseline_score * 100:.2f}%")
 
     # Test best_individual on new unseen traffic
     print("\n=== Testing Best Individual On Unseen Data ===\n")
-    generate_random_traffic("random_light_traffic.rou.xml", seed=random.randint(10000, 20000), period=20)
-    generate_random_traffic("random_heavy_traffic.rou.xml", seed=random.randint(20000, 30000), period=5)
+    generate_random_traffic("random_test_light_traffic.rou.xml", seed=random.randint(10000, 20000), period=20)
+    generate_random_traffic("random_test_heavy_traffic.rou.xml", seed=random.randint(20000, 30000), period=5)
 
-    test_traffic_files = ["random_light_traffic.rou.xml", "random_heavy_traffic.rou.xml"]
+    test_traffic_files = ["random_test_light_traffic.rou.xml", "random_test_heavy_traffic.rou.xml"]
 
     baseline_score = evaluate_individual(baseline, test_traffic_files)
     score_on_new = evaluate_individual(best_individual, test_traffic_files)
@@ -274,6 +309,7 @@ def main():
     plt.ylim(0, max(scores) * 1.2)
     plt.grid(axis='y', linestyle='--', alpha=0.6)
     plt.tight_layout()
+    plt.savefig('baseline_vs_optimized.png')
     plt.show()
 
     # Visualize the best solution
