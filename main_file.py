@@ -246,149 +246,144 @@ def generate_performance_graphs(generation_metrics):
     plt.savefig('ga_performance.png')
     plt.show()
 
-def main():
-    """Main function to run the genetic algorithm for traffic light optimization"""
-    # Setup for the GA
-    generate_random_traffic("random_light_traffic.rou.xml", seed=random.randint(1000, 9999), period=20)
-    generate_random_traffic("random_heavy_traffic.rou.xml", seed=random.randint(1000, 9999), period=5)
+# Setup for the GA
+generate_random_traffic("random_light_traffic.rou.xml", seed=random.randint(1000, 9999), period=20)
+generate_random_traffic("random_heavy_traffic.rou.xml", seed=random.randint(1000, 9999), period=5)
 
-    traffic_files = ["random_light_traffic.rou.xml", "random_heavy_traffic.rou.xml"]
+traffic_files = ["random_light_traffic.rou.xml", "random_heavy_traffic.rou.xml"]
 
-    population = [generate_individual() for _ in range(POP_SIZE)]
+population = [generate_individual() for _ in range(POP_SIZE)]
+
+# Baseline evaluation for comparison
+baseline = [42, 3, 42, 3]  # Default timing
+
+# Run the genetic algorithm
+best_individual = None
+best_score = float('inf')
+
+# Track metrics for visualization
+generation_metrics = {
+    'generation': [],
+    'best_score': [],
+    'avg_score': [],
+    'worst_score': [],
+    'diversity': []
+}
+
+for gen in range(NUM_GENERATIONS):
+    print(f"\n--- Generation {gen + 1}/{NUM_GENERATIONS} ---")
     
-    # Baseline evaluation for comparison
-    baseline = [42, 3, 42, 3]  # Default timing
+    # Evaluate the current population
+    scored_population = []
+    for i, individual in enumerate(population):
+        score = evaluate_individual(individual, traffic_files)
+        scored_population.append((individual, score))
+        print(f"  Individual {i+1}: {individual}, Score: {score:.2f}")
     
-    # Run the genetic algorithm
-    best_individual = None
-    best_score = float('inf')
+    # Sort by fitness (lower is better)
+    scored_population.sort(key=lambda x: x[1])
     
-    # Track metrics for visualization
-    generation_metrics = {
-        'generation': [],
-        'best_score': [],
-        'avg_score': [],
-        'worst_score': [],
-        'diversity': []
-    }
+    # Extract all scores and individuals for metrics
+    scores = [score for _, score in scored_population]
+    individuals = [ind for ind, _ in scored_population]
     
-    for gen in range(NUM_GENERATIONS):
-        print(f"\n--- Generation {gen + 1}/{NUM_GENERATIONS} ---")
+    # Calculate and store metrics
+    generation_metrics['generation'].append(gen + 1)
+    generation_metrics['best_score'].append(scores[0])
+    generation_metrics['avg_score'].append(sum(scores) / len(scores))
+    generation_metrics['worst_score'].append(scores[-1])
+    generation_metrics['diversity'].append(calculate_diversity(individuals))
+    
+    # Update best found solution
+    if scored_population[0][1] < best_score:
+        best_score = scored_population[0][1]
+        best_individual = scored_population[0][0].copy()
         
-        # Evaluate the current population
-        scored_population = []
-        for i, individual in enumerate(population):
-            score = evaluate_individual(individual, traffic_files)
-            scored_population.append((individual, score))
-            print(f"  Individual {i+1}: {individual}, Score: {score:.2f}")
-        
-        # Sort by fitness (lower is better)
-        scored_population.sort(key=lambda x: x[1])
-        
-        # Extract all scores and individuals for metrics
-        scores = [score for _, score in scored_population]
-        individuals = [ind for ind, _ in scored_population]
-        
-        # Calculate and store metrics
-        generation_metrics['generation'].append(gen + 1)
-        generation_metrics['best_score'].append(scores[0])
-        generation_metrics['avg_score'].append(sum(scores) / len(scores))
-        generation_metrics['worst_score'].append(scores[-1])
-        generation_metrics['diversity'].append(calculate_diversity(individuals))
-        
-        # Update best found solution
-        if scored_population[0][1] < best_score:
-            best_score = scored_population[0][1]
-            best_individual = scored_population[0][0].copy()
+    print(f"  Generation best: {scored_population[0][0]}, Score: {scored_population[0][1]:.2f}")
+    print(f"  Overall best: {best_individual}, Score: {best_score:.2f}")
+    
+    # Visualize the best individual of this generation
+    visualize_generation_best(scored_population[0][0], traffic_files, gen + 1)
+    
+    # Create the next generation
+    new_population = []
+    
+    # Elitism: Keep the best individual
+    new_population.append(scored_population[0][0].copy())
+    
+    # Generate children through crossover and mutation
+    children = []
+    while len(children) < NUM_CHILDREN:
+        parent1 = tournament_selection(scored_population)
+        parent2 = tournament_selection(scored_population)
+        child1, child2 = crossover(parent1, parent2)
+        children.extend([child1, child2])
+    
+    # Apply mutation
+    for i in range(len(children)):
+        if random.random() < MUTATION_RATE:
+            children[i] = mutate(children[i])
             
-        print(f"  Generation best: {scored_population[0][0]}, Score: {scored_population[0][1]:.2f}")
-        print(f"  Overall best: {best_individual}, Score: {best_score:.2f}")
-        
-        # Visualize the best individual of this generation
-        visualize_generation_best(scored_population[0][0], traffic_files, gen + 1)
-        
-        # Create the next generation
-        new_population = []
-        
-        # Elitism: Keep the best individual
-        new_population.append(scored_population[0][0].copy())
-        
-        # Generate children through crossover and mutation
-        children = []
-        while len(children) < NUM_CHILDREN:
-            parent1 = tournament_selection(scored_population)
-            parent2 = tournament_selection(scored_population)
-            child1, child2 = crossover(parent1, parent2)
-            children.extend([child1, child2])
-        
-        # Apply mutation
-        for i in range(len(children)):
-            if random.random() < MUTATION_RATE:
-                children[i] = mutate(children[i])
-                
-        # Add children to the population
-        new_population.extend(children)
-        
-        # Fill the rest of the population from the best individuals
-        while len(new_population) < POP_SIZE:
-            new_population.append(scored_population[len(new_population) - len(children)][0].copy())
-            
-        # Replace the old population
-        population = new_population
+    # Add children to the population
+    new_population.extend(children)
     
-    # Generate performance graphs
-    generate_performance_graphs(generation_metrics)
-    
-    # Final train results
-    print("\n=== Final Train Results ===")
-    print(f"Best traffic light configuration: {best_individual}")
-    print(f"Best score (avg. waiting time): {best_score:.2f} seconds")
+    # Fill the rest of the population from the best individuals
+    while len(new_population) < POP_SIZE:
+        new_population.append(scored_population[len(new_population) - len(children)][0].copy())
+        
+    # Replace the old population
+    population = new_population
 
-    # Test best_individual on new unseen traffic
-    print("\n=== Testing Best Individual On Unseen Data ===\n")
-    generate_random_traffic("random_test_light_traffic.rou.xml", seed=random.randint(10000, 20000), period=20)
-    generate_random_traffic("random_test_heavy_traffic.rou.xml", seed=random.randint(20000, 30000), period=5)
+# Generate performance graphs
+generate_performance_graphs(generation_metrics)
 
-    test_traffic_files = ["random_test_light_traffic.rou.xml", "random_test_heavy_traffic.rou.xml"]
+# Final train results
+print("\n=== Final Train Results ===")
+print(f"Best traffic light configuration: {best_individual}")
+print(f"Best score (avg. waiting time): {best_score:.2f} seconds")
 
-    baseline_score = evaluate_individual(baseline, test_traffic_files)
-    score_on_new = evaluate_individual(best_individual, test_traffic_files)
-    print(f"Baseline Score On Test Data: {baseline_score}")
-    print(f"GA Optimized Score on Test Data: {score_on_new:.2f} seconds avg. waiting time")
-    print(f"Improvement over baseline: {(baseline_score - score_on_new) / baseline_score * 100:.2f}%")
+# Test best_individual on new unseen traffic
+print("\n=== Testing Best Individual On Unseen Data ===\n")
+generate_random_traffic("random_test_light_traffic.rou.xml", seed=random.randint(10000, 20000), period=20)
+generate_random_traffic("random_test_heavy_traffic.rou.xml", seed=random.randint(20000, 30000), period=5)
 
-    # === Plot Comparison ===
-    labels = ['Baseline', 'GA Optimized']
-    scores = [baseline_score, score_on_new]
+test_traffic_files = ["random_test_light_traffic.rou.xml", "random_test_heavy_traffic.rou.xml"]
 
-    plt.figure(figsize=(8, 6))
-    bars = plt.bar(labels, scores, color=['orange', 'green'])
-    plt.ylabel("Average Waiting Time (seconds)")
-    plt.title("Baseline vs GA Optimized Signal Timings on Test Data")
+baseline_score = evaluate_individual(baseline, test_traffic_files)
+score_on_new = evaluate_individual(best_individual, test_traffic_files)
+print(f"Baseline Score On Test Data: {baseline_score}")
+print(f"GA Optimized Score on Test Data: {score_on_new:.2f} seconds avg. waiting time")
+print(f"Improvement over baseline: {(baseline_score - score_on_new) / baseline_score * 100:.2f}%")
 
-    # Annotate bars with values
-    for bar in bars:
-        yval = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.1, f'{yval:.2f}', ha='center', va='bottom')
+# === Plot Comparison ===
+labels = ['Baseline', 'GA Optimized']
+scores = [baseline_score, score_on_new]
 
-    plt.ylim(0, max(scores) * 1.2)
-    plt.grid(axis='y', linestyle='--', alpha=0.6)
-    plt.tight_layout()
-    plt.savefig('baseline_vs_optimized.png')
-    plt.show()
+plt.figure(figsize=(8, 6))
+bars = plt.bar(labels, scores, color=['orange', 'green'])
+plt.ylabel("Average Waiting Time (seconds)")
+plt.title("Baseline vs GA Optimized Signal Timings on Test Data")
 
-    # Visualize the best solution
-    visualize_best_solution(best_individual, traffic_files)
-    
-    # Plot convergence history
-    plt.figure(figsize=(10, 6))
-    plt.plot(generation_metrics['generation'], generation_metrics['best_score'], 'b-', marker='o')
-    plt.xlabel('Generation')
-    plt.ylabel('Best Score (Average Waiting Time)')
-    plt.title('GA Convergence History')
-    plt.grid(True)
-    plt.savefig('convergence_history.png')
-    plt.close()
+# Annotate bars with values
+for bar in bars:
+    yval = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2, yval + 0.1, f'{yval:.2f}', ha='center', va='bottom')
 
-if __name__ == "__main__":
-    main()
+plt.ylim(0, max(scores) * 1.2)
+plt.grid(axis='y', linestyle='--', alpha=0.6)
+plt.tight_layout()
+plt.savefig('baseline_vs_optimized.png')
+plt.show()
+
+# Visualize the best solution
+visualize_best_solution(best_individual, traffic_files)
+
+# Plot convergence history
+plt.figure(figsize=(10, 6))
+plt.plot(generation_metrics['generation'], generation_metrics['best_score'], 'b-', marker='o')
+plt.xlabel('Generation')
+plt.ylabel('Best Score (Average Waiting Time)')
+plt.title('GA Convergence History')
+plt.grid(True)
+plt.savefig('convergence_history.png')
+plt.close()

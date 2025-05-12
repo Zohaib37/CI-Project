@@ -152,79 +152,74 @@ def visualize_best_solution(best_individual, traffic_files, sim_steps=300):
             
         traci.close()
 
-def main():
-    """Main function to run the genetic algorithm for traffic light optimization"""
-    # Setup for the GA
-    traffic_files = ["light_traffic.rou.xml", "heavy_traffic.rou.xml"]
-    population = [generate_individual() for _ in range(POP_SIZE)]
-    
-    # Baseline evaluation for comparison
-    baseline = [42, 3, 42, 3]  # Default timing
-    baseline_score = evaluate_individual(baseline, traffic_files)
-    print(f"Baseline configuration {baseline} score: {baseline_score:.2f}")
-    
-    # Run the genetic algorithm
-    best_individual = None
-    best_score = float('inf')
-    
-    for gen in range(NUM_GENERATIONS):
-        print(f"\n--- Generation {gen + 1}/{NUM_GENERATIONS} ---")
-        
-        # Evaluate the current population
-        scored_population = []
-        for i, individual in enumerate(population):
-            score = evaluate_individual(individual, traffic_files)
-            scored_population.append((individual, score))
-            print(f"  Individual {i+1}: {individual}, Score: {score:.2f}")
-        
-        # Sort by fitness (lower is better)
-        scored_population.sort(key=lambda x: x[1])
-        
-        # Update best found solution
-        if scored_population[0][1] < best_score:
-            best_score = scored_population[0][1]
-            best_individual = scored_population[0][0].copy()
-            
-        print(f"  Generation best: {scored_population[0][0]}, Score: {scored_population[0][1]:.2f}")
-        print(f"  Overall best: {best_individual}, Score: {best_score:.2f}")
-        
-        # Create the next generation
-        new_population = []
-        
-        # Elitism: Keep the best individual
-        new_population.append(scored_population[0][0].copy())
-        
-        # Generate children through crossover and mutation
-        children = []
-        while len(children) < NUM_CHILDREN:
-            parent1 = tournament_selection(scored_population)
-            parent2 = tournament_selection(scored_population)
-            child1, child2 = crossover(parent1, parent2)
-            children.extend([child1, child2])
-        
-        # Apply mutation
-        for i in range(len(children)):
-            if random.random() < MUTATION_RATE:
-                children[i] = mutate(children[i])
-                
-        # Add children to the population
-        new_population.extend(children)
-        
-        # Fill the rest of the population from the best individuals
-        while len(new_population) < POP_SIZE:
-            new_population.append(scored_population[len(new_population) - len(children)][0].copy())
-            
-        # Replace the old population
-        population = new_population
-    
-    # Final results
-    print("\n=== Final Results ===")
-    print(f"Best traffic light configuration: {best_individual}")
-    print(f"Best score (avg. waiting time): {best_score:.2f} seconds")
-    print(f"Improvement over baseline: {(baseline_score - best_score) / baseline_score * 100:.2f}%")
-    
-    # Visualize the best solution
-    visualize_best_solution(best_individual, traffic_files)
+# Setup for the GA
+traffic_files = ["light_traffic.rou.xml", "heavy_traffic.rou.xml"]
+population = [generate_individual() for _ in range(POP_SIZE)]
 
-if __name__ == "__main__":
-    main()
+# Baseline evaluation for comparison
+baseline = [42, 3, 42, 3]  # Default timing
+baseline_score = evaluate_individual(baseline, traffic_files)
+print(f"Baseline configuration {baseline} score: {baseline_score:.2f}")
+
+# Run the genetic algorithm
+best_individual = None
+best_score = float('inf')
+
+for gen in range(NUM_GENERATIONS):
+    print(f"\n--- Generation {gen + 1}/{NUM_GENERATIONS} ---")
+    
+    # Evaluate the current population
+    scored_population = []
+    for i, individual in enumerate(population):
+        score = evaluate_individual(individual, traffic_files)
+        scored_population.append((individual, score))
+        print(f"  Individual {i+1}: {individual}, Score: {score:.2f}")
+    
+    # Sort by fitness (lower is better)
+    scored_population.sort(key=lambda x: x[1])
+    
+    # Update best found solution
+    if scored_population[0][1] < best_score:
+        best_score = scored_population[0][1]
+        best_individual = scored_population[0][0].copy()
+        
+    print(f"  Generation best: {scored_population[0][0]}, Score: {scored_population[0][1]:.2f}")
+    print(f"  Overall best: {best_individual}, Score: {best_score:.2f}")
+    
+    # Create the next generation
+    new_population = []
+    
+    # Elitism: Keep the best individual
+    new_population.append(scored_population[0][0].copy())
+    
+    # Generate children through crossover and mutation
+    children = []
+    while len(children) < NUM_CHILDREN:
+        parent1 = tournament_selection(scored_population)
+        parent2 = tournament_selection(scored_population)
+        child1, child2 = crossover(parent1, parent2)
+        children.extend([child1, child2])
+    
+    # Apply mutation
+    for i in range(len(children)):
+        if random.random() < MUTATION_RATE:
+            children[i] = mutate(children[i])
+            
+    # Add children to the population
+    new_population.extend(children)
+    
+    # Fill the rest of the population from the best individuals
+    while len(new_population) < POP_SIZE:
+        new_population.append(scored_population[len(new_population) - len(children)][0].copy())
+        
+    # Replace the old population
+    population = new_population
+
+# Final results
+print("\n=== Final Results ===")
+print(f"Best traffic light configuration: {best_individual}")
+print(f"Best score (avg. waiting time): {best_score:.2f} seconds")
+print(f"Improvement over baseline: {(baseline_score - best_score) / baseline_score * 100:.2f}%")
+
+# Visualize the best solution
+visualize_best_solution(best_individual, traffic_files)
